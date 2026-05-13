@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizontal Scrolling - Works</title>
+</head>
+
+<style>
+
+    @import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');   
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        width: 100vw;
+        overflow-x: hidden;
+        background: #f5f5f5;
+        font-family: Raleway, sans-serif;
+    }
+
+    h1{
+        position: fixed;
+        left: 5rem;
+        top: 2vh;
+        font-size: 5vw;
+        font-weight: 600;
+    }
+
+    h2{
+        position: fixed;
+        bottom: 2vh;
+        left: 5rem;
+        text-align: center;
+    }
+
+    h2 span{
+        font-weight: 300;
+        font-size: 1rem;
+        color: #0000007b;
+        display: block;
+    }
+
+    .progress{
+        position: fixed;
+        bottom: 4vh;
+        right: 5rem;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .progress-amount{
+        margin-left: 0.5rem;
+        font-size: 1.2rem;
+    }
+
+
+    .scroll-section {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+
+    .card {
+        width: 100% !important;
+        height: fit-content;
+        margin-right: 2rem;
+    }
+
+    .card img {
+        width: 100%;
+        object-fit: contain;
+        display: block;
+    }
+    
+    .card p {
+        margin-top: 0.75rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .scroll-container {
+        display: flex;
+        align-items: flex-end;
+        width: 100% !important;
+        margin-top: 20vh;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 7vw;
+            left: 1.5rem;
+        }
+
+        h2 {
+            left: 1.5rem;
+            bottom: 4vh;
+        }
+
+        h2 span {
+            font-size: 0.9rem;
+        }
+
+        .progress {
+            right: 1.5rem;
+            bottom: 4vh;
+            font-size: 0.7rem;
+        }
+
+        .progress-amount {
+            font-size: 1rem;
+        }
+    }
+
+
+    @media (max-width: 480px) {
+        h1 {
+            font-size: 10vw;
+            left: 1rem;
+            top: 1.5vh;
+        }
+
+        h2 {
+            left: 1rem;
+            bottom: 3vh;
+        }
+
+        h2 span {
+            display: inline;
+        }
+
+        .progress {
+            top: 2vh;
+            right: 1rem;
+            bottom: auto;
+            font-size: 0;
+        }
+
+        .progress-amount {
+            font-size: 1rem;
+            margin-left: 0;
+        }
+
+        .scroll-container {
+            margin-top: 12vh;
+        }
+    }
+
+</style>
+
+<body>
+    <main>
+        <h1>WORKS</h1>
+        <h2>OH Architecture <span>Inspired</span></h2>
+
+        <div class="progress"> SCROLL DOWN TO EXPLORE <span class="progress-amount">(00%)</span> </div>
+
+        <section class="scroll-section">
+            <div class="scroll-container">
+            
+            <div class="card">
+                <img src="https://cdn.prod.website-files.com/678f62698d1043f9f15c0cec/6870b6eba2c6d2e0c2068fa6_OH_SAMFORD%C2%A9ANDYMACPHERSON-1%20(1).avif" alt="">
+                <p>Jaloura Main House</p>
+            </div>
+            
+            <div class="card">
+                <img src="https://cdn.prod.website-files.com/678f62698d1043f9f15c0cec/68b8240475470413456f4c41_OH_SAMFORD%C2%A9ANDYMACPHERSON-47.avif" alt="">
+                <p>Jaloura Guest House</p>
+            </div>
+            
+            </div>
+        </section>
+
+    </main>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" integrity="sha512-NcZdtrT77bJr4STcmsGAESr06BYGE8woZdSdEgqnpyqac7sugNO+Tr4bGwGF3MsnEkGKhU2KL2xh6Ec+BqsaHA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" integrity="sha512-P2IDYZfqSwjcSjX0BKeNhwRUH8zRPGlgcWl5n6gBLzdi4Y5/0O4zaXrtO4K9TZK6Hn1BenYpKowuCavNandERg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", ()=>{
+            const lenis = new Lenis();
+            lenis.on("scroll", ScrollTrigger.update);
+            gsap.ticker.add((time) => {
+                lenis.raf(time * 1000);
+            });
+            gsap.ticker.lagSmoothing(0);
+
+            const scrollContainer = document.querySelector('.scroll-container');
+            const section = document.querySelector('.scroll-section');
+            const progressAmount = document.querySelector('.progress-amount');
+            
+
+            function initHorizontalScroll() {
+                
+                function getScrollAmount() {
+                    const scrollWidth = scrollContainer.scrollWidth;
+                    const windowWidth = window.innerWidth;
+                    
+                    return -(scrollWidth - windowWidth);
+                }
+
+                gsap.to(scrollContainer, {
+                    x: getScrollAmount,
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: section,
+                        pin: true,
+                        start: "top top",
+                        end: () => `+=${-getScrollAmount()}`,
+                        scrub: true,
+                        invalidateOnRefresh: true,
+                        onUpdate: (self) => {
+                            const percent = (self.progress * 100).toFixed(0).padStart(2, '0');
+                            progressAmount.textContent = `(${percent}%)`;
+                        }
+                    }
+                });
+            }
+
+            initHorizontalScroll();
+        })
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,521 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String     @id @default(cuid())
+  authUserId     String?    @unique
+  isSeedUser     Boolean    @default(false)
+  email          String     @unique
+  name           String?
+  phone          String?    @unique
+  password       String?
+  role           Role       @default(CUSTOMER)
+  image          String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  restaurants    Restaurant[]
+  orders         Order[]
+  reviews        Review[]
+  addresses      Address[]
+  cartItems      CartItem[]
+  deliveryOrders Delivery[] @relation("DeliveryOrders")
+  vendorMemberships VendorUser[]
+  tripPlans      TripPlan[]
+  accommodationBookingRequests AccommodationBookingRequest[]
+}
+
+model Vendor {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  businessType BusinessType @default(FOOD_AND_DINING)
+  tagline     String?
+  supportPhone String?
+  supportEmail String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  restaurants Restaurant[]
+  members     VendorUser[]
+  touristPlaces TouristPlace[]
+  transportOptions TransportOption[]
+  accommodations Accommodation[]
+  guideServices GuideService[]
+}
+
+model VendorUser {
+  id        String         @id @default(cuid())
+  vendorId  String
+  userId    String
+  role      VendorUserRole @default(STAFF)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  vendor    Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, userId])
+  @@index([userId])
+}
+
+model Restaurant {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
+  cuisineType   Json
+  address       String
+  city          String?
+  state         String?
+  latitude      Float
+  longitude     Float
+  phone         String
+  email         String
+  image         String?
+  isActive      Boolean     @default(true)
+  isOpen        Boolean     @default(false)
+  minOrder      Float       @default(0)
+  deliveryFee   Float       @default(0)
+  estimatedTime String?
+  ownerId       String
+  vendorId      String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  owner         User        @relation(fields: [ownerId], references: [id])
+  vendor        Vendor?     @relation(fields: [vendorId], references: [id])
+  menuItems     MenuItem[]
+  orders        Order[]
+  reviews       Review[]
+  tripItems     TripItem[]
+
+  @@index([vendorId])
+  @@index([state])
+}
+
+model MenuItem {
+  id           String    @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  category     String
+  image        String?
+  isAvailable  Boolean   @default(true)
+  isVeg        Boolean   @default(true)
+  spicyLevel   Int?      @default(0)
+  restaurantId String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+}
+
+model Order {
+  id               String        @id @default(cuid())
+  orderNumber      String        @unique
+  userId           String
+  restaurantId     String
+  totalAmount      Float
+  deliveryFee      Float
+  tax              Float
+  grandTotal       Float
+  status           OrderStatus   @default(PENDING)
+  paymentStatus    PaymentStatus @default(PENDING)
+  paymentMethod    PaymentMethod
+  deliveryAddress  String
+  latitude         Float?
+  longitude        Float?
+  specialInstructions String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  user             User          @relation(fields: [userId], references: [id])
+  restaurant       Restaurant    @relation(fields: [restaurantId], references: [id])
+  orderItems       OrderItem[]
+  payment          Payment?
+  delivery         Delivery?
+  reviews          Review[]
+}
+
+model OrderItem {
+  id                 String   @id @default(cuid())
+  orderId            String
+  menuItemId         String
+  quantity           Int
+  price              Float
+  totalPrice         Float
+  specialInstructions String?
+
+  order              Order    @relation(fields: [orderId], references: [id])
+  menuItem           MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model CartItem {
+  id          String   @id @default(cuid())
+  userId      String
+  menuItemId  String
+  quantity    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@unique([userId, menuItemId])
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String        @unique
+  amount          Float
+  stripePaymentId String?
+  status          PaymentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order           Order         @relation(fields: [orderId], references: [id])
+}
+
+model Delivery {
+  id                String         @id @default(cuid())
+  orderId           String         @unique
+  deliveryPartnerId String?
+  status            DeliveryStatus @default(SEARCHING)
+  pickupTime        DateTime?
+  deliveredTime     DateTime?
+  currentLatitude   Float?
+  currentLongitude  Float?
+  trackingUrl       String?
+
+  order             Order          @relation(fields: [orderId], references: [id])
+  deliveryPartner   User?          @relation("DeliveryOrders", fields: [deliveryPartnerId], references: [id])
+}
+
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  label       String
+  address     String
+  latitude    Float
+  longitude   Float
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Review {
+  id           String      @id @default(cuid())
+  orderId      String      @unique
+  userId       String
+  restaurantId String
+  rating       Int
+  comment      String?
+  createdAt    DateTime    @default(now())
+
+  order        Order       @relation(fields: [orderId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id])
+}
+
+model TouristPlace {
+  id                 String        @id @default(cuid())
+  name               String
+  slug               String        @unique
+  description        String?
+  category           PlaceCategory
+  address            String
+  city               String?
+  state              String?
+  latitude           Float
+  longitude          Float
+  phone              String?
+  website            String?
+  image              String?
+  isActive           Boolean       @default(true)
+  isFeatured         Boolean       @default(false)
+  rating             Float?
+  priceLabel         String?
+  estimatedVisitTime String?
+  familyFriendly     Boolean       @default(false)
+  tags               Json
+  vendorId           String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  vendor             Vendor?       @relation(fields: [vendorId], references: [id])
+  tripItems          TripItem[]
+
+  @@index([category])
+  @@index([city])
+  @@index([state])
+  @@index([vendorId])
+}
+
+model TransportOption {
+  id            String        @id @default(cuid())
+  name          String
+  slug          String        @unique
+  type          TransportType
+  description   String?
+  operatorName  String?
+  serviceArea   String?
+  address       String?
+  city          String?
+  state         String?
+  latitude      Float?
+  longitude     Float?
+  phone         String?
+  website       String?
+  pricingNotes  String?
+  hours         String?
+  isActive      Boolean       @default(true)
+  isFeatured    Boolean       @default(false)
+  vendorId      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  vendor        Vendor?       @relation(fields: [vendorId], references: [id])
+  tripItems     TripItem[]
+
+  @@index([type])
+  @@index([city])
+  @@index([state])
+  @@index([vendorId])
+}
+
+model Accommodation {
+  id               String            @id @default(cuid())
+  name             String
+  slug             String            @unique
+  type             AccommodationType
+  description      String?
+  address          String
+  city             String?
+  state            String?
+  latitude         Float?
+  longitude        Float?
+  phone            String?
+  email            String?
+  website          String?
+  pricePerNight    Float?
+  amenities        Json
+  roomCount        Int?
+  checkInTime      String?
+  checkOutTime     String?
+  isActive         Boolean           @default(true)
+  isFeatured       Boolean           @default(false)
+  vendorId         String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  vendor           Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  bookingRequests  AccommodationBookingRequest[]
+
+  @@index([type])
+  @@index([city])
+  @@index([state])
+  @@index([vendorId])
+}
+
+model AccommodationBookingRequest {
+  id              String                     @id @default(cuid())
+  accommodationId String
+  userId          String?
+  guestName       String
+  guestEmail      String
+  guestPhone      String?
+  checkInDate     DateTime
+  checkOutDate    DateTime
+  guests          Int                        @default(1)
+  rooms           Int?
+  message         String?
+  status          AccommodationBookingStatus @default(PENDING)
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+
+  accommodation   Accommodation              @relation(fields: [accommodationId], references: [id], onDelete: Cascade)
+  user            User?                      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([accommodationId, createdAt])
+  @@index([userId])
+  @@index([status])
+}
+
+model GuideService {
+  id               String      @id @default(cuid())
+  name             String
+  slug             String      @unique
+  description      String?
+  city             String?
+  state            String?
+  phone            String?
+  email            String?
+  website          String?
+  languages        Json
+  specialties      Json
+  yearsExperience  Int?
+  hourlyRate       Float?
+  fullDayRate      Float?
+  isLicensed       Boolean     @default(false)
+  isActive         Boolean     @default(true)
+  isFeatured       Boolean     @default(false)
+  vendorId         String
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  vendor           Vendor      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([city])
+  @@index([state])
+  @@index([vendorId])
+}
+
+model TripPlan {
+  id              String      @id @default(cuid())
+  userId          String
+  title           String
+  destinationCity String?
+  startDate       DateTime?
+  endDate         DateTime?
+  notes           String?
+  isDefault       Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           TripItem[]
+
+  @@index([userId])
+}
+
+model TripItem {
+  id                String           @id @default(cuid())
+  tripPlanId        String
+  restaurantId      String?
+  touristPlaceId    String?
+  transportOptionId String?
+  bookingStatus     TripItemStatus   @default(SAVED)
+  bookedAt          DateTime?
+  dayNumber         Int?
+  timeSlot          String?
+  note              String?
+  sortOrder         Int              @default(0)
+  createdAt         DateTime         @default(now())
+
+  tripPlan          TripPlan         @relation(fields: [tripPlanId], references: [id], onDelete: Cascade)
+  restaurant        Restaurant?      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  touristPlace      TouristPlace?    @relation(fields: [touristPlaceId], references: [id], onDelete: Cascade)
+  transportOption   TransportOption? @relation(fields: [transportOptionId], references: [id], onDelete: Cascade)
+
+  @@index([tripPlanId])
+  @@index([restaurantId])
+  @@index([touristPlaceId])
+  @@index([transportOptionId])
+}
+
+enum Role {
+  CUSTOMER
+  RESTAURANT_OWNER
+  DELIVERY_PARTNER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum DeliveryStatus {
+  SEARCHING
+  ASSIGNED
+  PICKED_UP
+  DELIVERED
+  CANCELLED
+}
+
+enum TripItemStatus {
+  SAVED
+  BOOKING_PENDING
+  BOOKED
+  VISITED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+}
+
+enum VendorUserRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum PlaceCategory {
+  ATTRACTION
+  LANDMARK
+  MUSEUM
+  BEACH
+  SHOPPING
+  NIGHTLIFE
+  PARK
+  ESSENTIAL
+}
+
+enum TransportType {
+  PRIVATE_CAB
+  PUBLIC_BUS
+  METRO
+  TRAIN
+  AUTO_RICKSHAW
+  AIRPORT_TRANSFER
+  FERRY
+  BIKE_RENTAL
+}
+
+enum BusinessType {
+  FOOD_AND_DINING
+  TRANSPORT_OPERATOR
+  HOSPITALITY_STAY
+  TOUR_GUIDE
+  ATTRACTION_OPERATOR
+  LOCAL_EXPERIENCE
+}
+
+enum AccommodationType {
+  HOTEL
+  LODGE
+  RESORT
+  HOMESTAY
+  HOSTEL
+  APARTMENT_STAY
+}
+
+enum AccommodationBookingStatus {
+  PENDING
+  CONTACTED
+  CONFIRMED
+  CANCELLED
+}
