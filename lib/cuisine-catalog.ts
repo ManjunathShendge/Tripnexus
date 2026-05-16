@@ -161,3 +161,32 @@ export function buildStarterMenuFromCuisines(selectedCuisines: string[]): Starte
 
   return Array.from(dishMap.values()).slice(0, 24);
 }
+
+function titleCaseWords(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+export function buildMenuItemsFromFreeformEntries(entries: string[]): StarterMenuItem[] {
+  const uniqueEntries = Array.from(
+    new Set(entries.map((entry) => entry.trim()).filter(Boolean)),
+  ).slice(0, 24);
+
+  return uniqueEntries.map((entry, index) => {
+    const normalizedName = titleCaseWords(entry);
+    const isVeg = guessIsVeg(normalizedName);
+    const basePrice = isVeg ? 6.9 : 8.9;
+
+    return {
+      name: normalizedName,
+      description: `Signature house item: ${normalizedName}.`,
+      category: guessCategory(normalizedName),
+      price: Number((basePrice + (index % 5) * 1.25).toFixed(2)),
+      isVeg,
+      spicyLevel: normalizedName.toLowerCase().includes("spicy") ? 4 : 2,
+    };
+  });
+}

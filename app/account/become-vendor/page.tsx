@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AccommodationType, BusinessType, Prisma, TransportType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAppUser } from "@/lib/vendor-context";
-import { buildStarterMenuFromCuisines } from "@/lib/cuisine-catalog";
+import { buildMenuItemsFromFreeformEntries, buildStarterMenuFromCuisines } from "@/lib/cuisine-catalog";
 import { BUSINESS_TYPE_LABELS, splitCommaList } from "@/lib/business";
 import { INDIA_STATES, getStateCentroid } from "@/lib/india-geo";
 import { BusinessTypeFields } from "@/components/business-type-fields";
@@ -25,6 +26,176 @@ const RESTAURANT_FIELDS = new Set(
 
 function parseEnumValue<T extends string>(value: string, allowed: readonly T[]) {
   return allowed.includes(value as T) ? (value as T) : null;
+}
+
+async function deleteVendorProfile(formData: FormData) {
+  "use server";
+
+  const user = await getCurrentAppUser();
+  if (!user) {
+    redirect("/auth/login?next=/account/become-vendor");
+  }
+
+  const vendorId = formData.get("vendorId")?.toString().trim() ?? "";
+  if (!vendorId) {
+    redirect("/account/become-vendor?error=missing_vendor");
+  }
+
+  const membership = await prisma.vendorUser.findFirst({
+    where: {
+      vendorId,
+      userId: user.id,
+    },
+    include: {
+      vendor: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+
+  if (!membership) {
+    redirect("/account/become-vendor?error=vendor_not_found");
+  }
+
+  if (membership.role !== "OWNER") {
+    redirect("/account/become-vendor?error=only_owner_can_delete_business");
+  }
+
+  const [restaurantIds, accommodationIds, orderCount, bookingRequestCount] = await Promise.all([
+    prisma.restaurant.findMany({
+      where: { vendorId },
+      select: { id: true },
+    }),
+    prisma.accommodation.findMany({
+      where: { vendorId },
+      select: { id: true },
+    }),
+    prisma.order.count({
+      where: {
+        restaurant: {
+          vendorId,
+        },
+      },
+    }),
+    prisma.accommodationBookingRequest.count({
+      where: {
+        accommodation: {
+          vendorId,
+        },
+      },
+    }),
+  ]);
+
+  if (orderCount > 0 || bookingRequestCount > 0) {
+    redirect("/account/become-vendor?error=business_has_orders_or_booking_requests");
+  }
+
+  const restaurantIdList = restaurantIds.map((restaurant) => restaurant.id);
+  const accommodationIdList = accommodationIds.map((accommodation) => accommodation.id);
+
+  await prisma.$transaction(async (tx) => {
+    if (restaurantIdList.length > 0) {
+      const menuItems = await tx.menuItem.findMany({
+        where: {
+          restaurantId: { in: restaurantIdList },
+        },
+        select: { id: true },
+      });
+
+      const menuItemIdList = menuItems.map((item) => item.id);
+
+      if (menuItemIdList.length > 0) {
+        await tx.cartItem.deleteMany({
+          where: {
+            menuItemId: { in: menuItemIdList },
+          },
+        });
+
+        await tx.menuItem.deleteMany({
+          where: {
+            id: { in: menuItemIdList },
+          },
+        });
+      }
+
+      await tx.review.deleteMany({
+        where: {
+          restaurantId: { in: restaurantIdList },
+        },
+      });
+
+      await tx.tripItem.deleteMany({
+        where: {
+          restaurantId: { in: restaurantIdList },
+        },
+      });
+
+      await tx.restaurant.deleteMany({
+        where: {
+          id: { in: restaurantIdList },
+        },
+      });
+    }
+
+    if (accommodationIdList.length > 0) {
+      await tx.accommodationBookingRequest.deleteMany({
+        where: {
+          accommodationId: { in: accommodationIdList },
+        },
+      });
+    }
+
+    await tx.tripItem.deleteMany({
+      where: {
+        touristPlace: {
+          vendorId,
+        },
+      },
+    });
+
+    await tx.tripItem.deleteMany({
+      where: {
+        transportOption: {
+          vendorId,
+        },
+      },
+    });
+
+    await tx.touristPlace.deleteMany({
+      where: { vendorId },
+    });
+
+    await tx.transportOption.deleteMany({
+      where: { vendorId },
+    });
+
+    await tx.guideService.deleteMany({
+      where: { vendorId },
+    });
+
+    await tx.accommodation.deleteMany({
+      where: { vendorId },
+    });
+
+    await tx.vendorUser.deleteMany({
+      where: { vendorId },
+    });
+
+    await tx.vendor.delete({
+      where: { id: vendorId },
+    });
+  });
+
+  revalidatePath("/account/become-vendor");
+  revalidatePath("/vendor/orders");
+  revalidatePath("/restaurants");
+  revalidatePath("/stays");
+  revalidatePath("/transport");
+  revalidatePath("/explore");
+
+  redirect("/account/become-vendor?deleted=1");
 }
 
 async function createVendorProfile(formData: FormData) {
@@ -176,7 +347,13 @@ async function createVendorProfile(formData: FormData) {
       });
 
       if (createStarterMenu) {
-        for (const item of buildStarterMenuFromCuisines(cuisines)) {
+        const starterMenuItems = buildStarterMenuFromCuisines(cuisines);
+        const menuItemsToCreate =
+          starterMenuItems.length > 0
+            ? starterMenuItems
+            : buildMenuItemsFromFreeformEntries(cuisines);
+
+        for (const item of menuItemsToCreate) {
           await tx.menuItem.create({
             data: {
               restaurantId: createdRestaurant.id,
@@ -359,7 +536,7 @@ async function createVendorProfile(formData: FormData) {
 }
 
 type BecomeVendorPageProps = {
-  searchParams: Promise<{ error?: string; vendor?: string }>;
+  searchParams: Promise<{ deleted?: string; error?: string; vendor?: string }>;
 };
 
 export default async function BecomeVendorPage({ searchParams }: BecomeVendorPageProps) {
@@ -433,26 +610,50 @@ export default async function BecomeVendorPage({ searchParams }: BecomeVendorPag
           </div>
         ) : null}
 
+        {query.deleted ? (
+          <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+            Business deleted successfully.
+          </div>
+        ) : null}
+
         {memberships.length > 0 ? (
           <section className="mb-6 rounded-2xl border border-cyan-100 bg-white p-5 shadow-sm">
             <h2 className="mb-3 text-lg font-semibold text-slate-900">Existing Partner Memberships</h2>
             <div className="flex flex-wrap gap-2">
-              {memberships.map((membership) => (
-                <Link
-                  key={membership.id}
-                  href={`/vendor/orders?vendor=${membership.vendor.slug}`}
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                >
-                  {membership.vendor.name} · {BUSINESS_TYPE_LABELS[membership.vendor.businessType]}
-                </Link>
-              ))}
+              {memberships.map((membership) => {
+                const businessLabel = BUSINESS_TYPE_LABELS[membership.vendor.businessType];
+
+                return (
+                  <div
+                    key={membership.id}
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
+                  >
+                    <Link href={`/vendor/orders?vendor=${membership.vendor.slug}`} className="hover:text-slate-900">
+                      {membership.vendor.name} · {businessLabel}
+                    </Link>
+                    {membership.role === "OWNER" ? (
+                      <form action={deleteVendorProfile}>
+                        <input type="hidden" name="vendorId" value={membership.vendor.id} />
+                        <button
+                          type="submit"
+                          className="rounded-md border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
+                        >
+                          Delete
+                        </button>
+                      </form>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           </section>
         ) : null}
 
         <form action={createVendorProfile} className="space-y-6 rounded-2xl border border-cyan-100 bg-white p-6 shadow-sm">
           <input type="hidden" name="vendorId" value={vendorToEdit?.id ?? ""} />
-          <input type="hidden" name="businessType" value={vendorToEdit?.businessType ?? "FOOD_AND_DINING"} />
+          {isEditMode ? (
+            <input type="hidden" name="businessType" value={vendorToEdit?.businessType ?? "FOOD_AND_DINING"} />
+          ) : null}
 
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Business Profile</h2>
