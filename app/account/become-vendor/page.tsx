@@ -630,9 +630,22 @@ export default async function BecomeVendorPage({ searchParams }: BecomeVendorPag
                     key={membership.id}
                     className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
                   >
-                    <Link href={`/vendor/orders?vendor=${membership.vendor.slug}`} className="hover:text-slate-900">
-                      {membership.vendor.name} · {businessLabel}
-                    </Link>
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <Link
+                        href={`/vendor/orders?vendor=${membership.vendor.slug}`}
+                        className="truncate hover:text-slate-900"
+                      >
+                        {membership.vendor.name} · {businessLabel}
+                      </Link>
+                    </div>
+                    {membership.role === "OWNER" ? (
+                      <Link
+                        href={`/account/become-vendor?vendor=${membership.vendor.slug}`}
+                        className="rounded-md border border-cyan-200 px-2 py-1 text-xs font-semibold text-cyan-800 transition hover:bg-cyan-50"
+                      >
+                        Edit
+                      </Link>
+                    ) : null}
                     {membership.role === "OWNER" ? (
                       <form action={deleteVendorProfile}>
                         <input type="hidden" name="membershipId" value={membership.id} />
