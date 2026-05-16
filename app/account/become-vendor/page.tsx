@@ -36,32 +36,34 @@ async function deleteVendorProfile(formData: FormData) {
     redirect("/auth/login?next=/account/become-vendor");
   }
 
-  const vendorId = formData.get("vendorId")?.toString().trim() ?? "";
-  if (!vendorId) {
-    redirect("/account/become-vendor?error=missing_vendor");
+  const membershipId = formData.get("membershipId")?.toString().trim() ?? "";
+  if (!membershipId) {
+    redirect("/account/become-vendor?error=missing_membership");
   }
 
-  const membership = await prisma.vendorUser.findFirst({
+  const membership = await prisma.vendorUser.findUnique({
     where: {
-      vendorId,
-      userId: user.id,
+      id: membershipId,
     },
     include: {
       vendor: {
         select: {
           id: true,
+          slug: true,
         },
       },
     },
   });
 
-  if (!membership) {
+  if (!membership || membership.userId !== user.id) {
     redirect("/account/become-vendor?error=vendor_not_found");
   }
 
   if (membership.role !== "OWNER") {
     redirect("/account/become-vendor?error=only_owner_can_delete_business");
   }
+
+  const vendorId = membership.vendorId;
 
   const [restaurantIds, accommodationIds, orderCount, bookingRequestCount] = await Promise.all([
     prisma.restaurant.findMany({
@@ -633,7 +635,7 @@ export default async function BecomeVendorPage({ searchParams }: BecomeVendorPag
                     </Link>
                     {membership.role === "OWNER" ? (
                       <form action={deleteVendorProfile}>
-                        <input type="hidden" name="vendorId" value={membership.vendor.id} />
+                        <input type="hidden" name="membershipId" value={membership.id} />
                         <button
                           type="submit"
                           className="rounded-md border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
