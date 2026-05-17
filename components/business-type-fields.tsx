@@ -16,6 +16,83 @@ const BUSINESS_TYPES = Object.keys(BUSINESS_TYPE_LABELS) as BusinessType[];
 const TRANSPORT_TYPES = Object.keys(TRANSPORT_TYPE_LABELS) as TransportType[];
 const ACCOMMODATION_TYPES = Object.keys(ACCOMMODATION_TYPE_LABELS) as AccommodationType[];
 
+function CoordinateHelper({
+  latitudeName,
+  longitudeName,
+  toneClasses,
+}: {
+  latitudeName: string;
+  longitudeName: string;
+  toneClasses: string;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  function setCoordinateValue(name: string, value: string) {
+    const input = document.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+    if (!input) {
+      return;
+    }
+
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function handleUseLocation() {
+    setMessage("");
+    setLoading(true);
+
+    if (!navigator.geolocation) {
+      setLoading(false);
+      setMessage("Geolocation is not supported on this device.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = position.coords.latitude.toFixed(6);
+        const longitude = position.coords.longitude.toFixed(6);
+
+        setCoordinateValue(latitudeName, latitude);
+        setCoordinateValue(longitudeName, longitude);
+        setLoading(false);
+        setMessage(`Coordinates filled: ${latitude}, ${longitude}`);
+      },
+      () => {
+        setLoading(false);
+        setMessage("Location permission denied. You can still enter coordinates manually.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+      },
+    );
+  }
+
+  return (
+    <div className={`rounded-xl border px-3 py-3 ${toneClasses}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Business coordinates</p>
+          <p className="text-xs text-slate-600">
+            Use the current browser location to compare this business against traveler distance.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleUseLocation}
+          disabled={loading}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition hover:bg-slate-50 disabled:opacity-60"
+        >
+          {loading ? "Finding location..." : "Use browser location"}
+        </button>
+      </div>
+      {message ? <p className="mt-2 text-xs text-slate-600">{message}</p> : null}
+    </div>
+  );
+}
+
 export function BusinessTypeFields({ states }: BusinessTypeFieldsProps) {
   const [businessType, setBusinessType] = useState<BusinessType>("FOOD_AND_DINING");
 
@@ -84,6 +161,11 @@ export function BusinessTypeFields({ states }: BusinessTypeFieldsProps) {
               ))}
             </select>
           </div>
+          <CoordinateHelper
+            latitudeName="restaurantLatitude"
+            longitudeName="restaurantLongitude"
+            toneClasses="border-orange-200 bg-white/80"
+          />
           <div className="grid gap-3 sm:grid-cols-2">
             <input name="restaurantLatitude" type="number" step="0.0001" placeholder="Latitude" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
             <input name="restaurantLongitude" type="number" step="0.0001" placeholder="Longitude" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
@@ -107,6 +189,7 @@ export function BusinessTypeFields({ states }: BusinessTypeFieldsProps) {
             ))}
           </select>
           <input name="transportServiceArea" placeholder="Service area (e.g. Airport to city center)" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+          <input name="transportAddress" placeholder="Business address or primary pickup point" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           <input name="transportPricingNotes" placeholder="Pricing notes" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           <input name="transportHours" placeholder="Hours (e.g. 24x7)" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -119,6 +202,15 @@ export function BusinessTypeFields({ states }: BusinessTypeFieldsProps) {
                 </option>
               ))}
             </select>
+          </div>
+          <CoordinateHelper
+            latitudeName="transportLatitude"
+            longitudeName="transportLongitude"
+            toneClasses="border-sky-200 bg-white/80"
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input name="transportLatitude" type="number" step="0.0001" placeholder="Latitude (optional)" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            <input name="transportLongitude" type="number" step="0.0001" placeholder="Longitude (optional)" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <input name="transportPhone" placeholder="Contact phone" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
@@ -150,6 +242,15 @@ export function BusinessTypeFields({ states }: BusinessTypeFieldsProps) {
                 </option>
               ))}
             </select>
+          </div>
+          <CoordinateHelper
+            latitudeName="accommodationLatitude"
+            longitudeName="accommodationLongitude"
+            toneClasses="border-emerald-200 bg-white/80"
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input name="accommodationLatitude" type="number" step="0.0001" placeholder="Latitude (optional)" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+            <input name="accommodationLongitude" type="number" step="0.0001" placeholder="Longitude (optional)" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <input name="pricePerNight" type="number" step="0.01" placeholder="Price per night" className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />

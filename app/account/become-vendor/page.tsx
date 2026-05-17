@@ -28,6 +28,29 @@ function parseEnumValue<T extends string>(value: string, allowed: readonly T[]) 
   return allowed.includes(value as T) ? (value as T) : null;
 }
 
+function resolveCoordinatesFromState(
+  state: string,
+  latitudeValue: string | null | undefined,
+  longitudeValue: string | null | undefined,
+) {
+  const latitude = Number.parseFloat(latitudeValue ?? "");
+  const longitude = Number.parseFloat(longitudeValue ?? "");
+
+  if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {
+    return { latitude, longitude };
+  }
+
+  const centroid = getStateCentroid(state);
+  if (!centroid) {
+    return null;
+  }
+
+  return {
+    latitude: centroid.latitude,
+    longitude: centroid.longitude,
+  };
+}
+
 async function deleteVendorProfile(formData: FormData) {
   "use server";
 
@@ -314,16 +337,14 @@ async function createVendorProfile(formData: FormData) {
       }
 
       const cuisines = cuisineInput ? splitCommaList(cuisineInput) : ["General"];
-      let latitude = Number.parseFloat(formData.get("restaurantLatitude")?.toString() ?? "");
-      let longitude = Number.parseFloat(formData.get("restaurantLongitude")?.toString() ?? "");
+      const coordinates = resolveCoordinatesFromState(
+        restaurantState,
+        formData.get("restaurantLatitude")?.toString(),
+        formData.get("restaurantLongitude")?.toString(),
+      );
 
-      if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
-        const centroid = getStateCentroid(restaurantState);
-        if (!centroid) {
-          redirect("/account/become-vendor?error=missing_location");
-        }
-        latitude = centroid.latitude;
-        longitude = centroid.longitude;
+      if (!coordinates) {
+        redirect("/account/become-vendor?error=missing_location");
       }
 
       const createdRestaurant = await tx.restaurant.create({
@@ -334,8 +355,8 @@ async function createVendorProfile(formData: FormData) {
           address: restaurantAddress,
           ...(RESTAURANT_FIELDS.has("city") ? { city: restaurantCity } : {}),
           ...(RESTAURANT_FIELDS.has("state") ? { state: restaurantState } : {}),
-          latitude,
-          longitude,
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
           phone: restaurantPhone,
           email: restaurantEmail,
           isActive: true,
@@ -382,6 +403,7 @@ async function createVendorProfile(formData: FormData) {
       const transportServiceArea = formData.get("transportServiceArea")?.toString().trim() ?? "";
       const transportPricingNotes = formData.get("transportPricingNotes")?.toString().trim() ?? "";
       const transportHours = formData.get("transportHours")?.toString().trim() ?? "";
+      const transportAddress = formData.get("transportAddress")?.toString().trim() ?? "";
       const transportCity = formData.get("transportCity")?.toString().trim() ?? "";
       const transportState = formData.get("transportState")?.toString().trim() ?? "";
       const transportPhone = formData.get("transportPhone")?.toString().trim() ?? "";
@@ -391,6 +413,12 @@ async function createVendorProfile(formData: FormData) {
         redirect("/account/become-vendor?error=transport_fields_required");
       }
 
+      const transportCoordinates = resolveCoordinatesFromState(
+        transportState,
+        formData.get("transportLatitude")?.toString(),
+        formData.get("transportLongitude")?.toString(),
+      );
+
       await tx.transportOption.create({
         data: {
           name: transportName,
@@ -399,8 +427,11 @@ async function createVendorProfile(formData: FormData) {
           description: `${transportName} helps tourists move across ${transportCity}.`,
           operatorName: businessName,
           serviceArea: transportServiceArea || `${transportCity} tourist circuit`,
+          address: transportAddress || null,
           city: transportCity,
           state: transportState,
+          latitude: transportCoordinates?.latitude ?? null,
+          longitude: transportCoordinates?.longitude ?? null,
           phone: transportPhone || supportPhone || null,
           website: transportWebsite || null,
           pricingNotes: transportPricingNotes || "Contact for route-wise pricing",
@@ -432,6 +463,12 @@ async function createVendorProfile(formData: FormData) {
         redirect("/account/become-vendor?error=accommodation_fields_required");
       }
 
+      const accommodationCoordinates = resolveCoordinatesFromState(
+        accommodationState,
+        formData.get("accommodationLatitude")?.toString(),
+        formData.get("accommodationLongitude")?.toString(),
+      );
+
       await tx.accommodation.create({
         data: {
           name: accommodationName,
@@ -441,6 +478,8 @@ async function createVendorProfile(formData: FormData) {
           address: accommodationAddress,
           city: accommodationCity,
           state: accommodationState,
+          latitude: accommodationCoordinates?.latitude ?? null,
+          longitude: accommodationCoordinates?.longitude ?? null,
           phone: supportPhone || null,
           email: supportEmail || null,
           pricePerNight: Number.isNaN(pricePerNight) ? null : pricePerNight,
