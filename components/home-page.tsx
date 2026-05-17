@@ -5,6 +5,7 @@ import {
   BedDouble,
   Car,
   Compass,
+  Menu,
   MapPinned,
   ShieldCheck,
   Sparkles,
@@ -128,7 +129,7 @@ export function HomePage({ counts, featuredPlaces, featuredTransport }: HomePage
 
       <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
         <header className="sticky top-4 z-30 mb-10">
-          <div className="rounded-[2rem] border border-white/65 bg-white/72 px-4 py-3 shadow-[0_16px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <div className="relative rounded-[2rem] border border-white/65 bg-white/72 px-4 py-3 shadow-[0_16px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <Link href="/" className="flex min-w-0 items-center gap-3">
                 <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ef6f38_0%,#ffaf56_100%)] text-base font-bold text-white shadow-[0_14px_35px_rgba(239,111,56,0.32)]">
@@ -153,23 +154,33 @@ export function HomePage({ counts, featuredPlaces, featuredTransport }: HomePage
               </nav>
 
               <div className="flex items-center gap-2">
+                <details className="relative lg:hidden">
+                  <summary className="flex h-10 w-10 list-none items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-700 shadow-sm transition hover:bg-white">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Open navigation menu</span>
+                  </summary>
+                  <div className="absolute right-0 top-[calc(100%+0.75rem)] w-64 rounded-[1.5rem] border border-white/70 bg-white/95 p-3 shadow-[0_22px_55px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+                    <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Navigate
+                    </p>
+                    <nav className="grid gap-2">
+                      {quickLinks.map((item) => (
+                        <ButtonLink
+                          key={item.href}
+                          href={item.href}
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start rounded-2xl"
+                        >
+                          {item.label}
+                        </ButtonLink>
+                      ))}
+                    </nav>
+                  </div>
+                </details>
                 <UserNav />
               </div>
             </div>
-
-            <nav className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:hidden">
-              {quickLinks.map((item) => (
-                <ButtonLink
-                  key={item.href}
-                  href={item.href}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-center"
-                >
-                  {item.label}
-                </ButtonLink>
-              ))}
-            </nav>
           </div>
         </header>
 
