@@ -38,14 +38,14 @@ export function SiteFooter() {
           </Badge>
           <div className="space-y-3">
             <Link href="/" className="inline-flex items-center gap-3">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ef6f38_0%,#ffaf56_100%)] text-base font-bold text-white shadow-[0_14px_35px_rgba(239,111,56,0.28)]">
+              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ef6f38_0%,#ffaf56_100%)] text-base font-bold text-white shadow-[0_14px_35px_rgba(239,111,56,0.28)]">
                 TN
               </span>
-              <div>
+              <div className="min-w-0">
                 <div className="text-sm font-semibold tracking-[0.2em] text-slate-500">
                   TRIPNEXUS
                 </div>
-                <div className="text-sm text-slate-700">
+                <div className="text-sm text-slate-700 sm:truncate">
                   Nearby planning with better flow and stronger context.
                 </div>
               </div>
@@ -86,7 +86,7 @@ export function SiteFooter() {
 
       <div className="border-t border-white/60">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-sm text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-          <p>© 2026 TripNexus. Built for smoother tourist discovery and trip planning.</p>
+          <p>&copy; 2026 TripNexus. Built for smoother tourist discovery and trip planning.</p>
           <p>Designed to keep restaurants, rides, stays, and local places in one journey.</p>
         </div>
       </div>

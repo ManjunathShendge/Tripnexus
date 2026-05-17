@@ -128,30 +128,48 @@ export function HomePage({ counts, featuredPlaces, featuredTransport }: HomePage
 
       <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
         <header className="sticky top-4 z-30 mb-10">
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-full border border-white/65 bg-white/72 px-4 py-3 shadow-[0_16px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <Link href="/" className="flex items-center gap-3">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ef6f38_0%,#ffaf56_100%)] text-base font-bold text-white shadow-[0_14px_35px_rgba(239,111,56,0.32)]">
-                TN
-              </span>
-              <div>
-                <div className="text-sm font-semibold tracking-[0.2em] text-slate-500">
-                  TRIPNEXUS
+          <div className="rounded-[2rem] border border-white/65 bg-white/72 px-4 py-3 shadow-[0_16px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <Link href="/" className="flex min-w-0 items-center gap-3">
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ef6f38_0%,#ffaf56_100%)] text-base font-bold text-white shadow-[0_14px_35px_rgba(239,111,56,0.32)]">
+                  TN
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold tracking-[0.2em] text-slate-500">
+                    TRIPNEXUS
+                  </div>
+                  <div className="truncate text-sm text-slate-700">
+                    Plan nearby, move easy, eat better.
+                  </div>
                 </div>
-                <div className="text-sm text-slate-700">Plan nearby, move easy, eat better.</div>
-              </div>
-            </Link>
+              </Link>
 
-            <nav className="hidden items-center gap-2 lg:flex">
+              <nav className="hidden items-center gap-2 lg:flex">
+                {quickLinks.map((item) => (
+                  <ButtonLink key={item.href} href={item.href} variant="ghost" size="sm">
+                    {item.label}
+                  </ButtonLink>
+                ))}
+              </nav>
+
+              <div className="flex items-center gap-2">
+                <UserNav />
+              </div>
+            </div>
+
+            <nav className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:hidden">
               {quickLinks.map((item) => (
-                <ButtonLink key={item.href} href={item.href} variant="ghost" size="sm">
+                <ButtonLink
+                  key={item.href}
+                  href={item.href}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-center"
+                >
                   {item.label}
                 </ButtonLink>
               ))}
             </nav>
-
-            <div className="flex items-center gap-2">
-              <UserNav />
-            </div>
           </div>
         </header>
 
@@ -163,7 +181,7 @@ export function HomePage({ counts, featuredPlaces, featuredTransport }: HomePage
             </Badge>
 
             <div className="space-y-5">
-              <h1 className="max-w-3xl text-balance text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
+              <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
                 A cleaner travel homepage that helps visitors decide faster.
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">

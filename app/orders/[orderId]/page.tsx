@@ -55,29 +55,29 @@ export default async function OrderDetailsPage({
   return (
     <main className="min-h-screen bg-gradient-to-b from-orange-50 via-amber-50 to-white">
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Order Details</h1>
             <p className="mt-1 text-sm text-slate-600">Customer: {customer.email}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
             <Link
               href="/restaurants"
-              className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-50"
+              className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-center text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-50"
             >
               Browse Restaurants
             </Link>
             {order.paymentStatus !== "SUCCESS" && order.paymentMethod !== "CASH" ? (
               <Link
                 href={`/checkout/pay?orderId=${order.id}`}
-                className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-700"
+                className="rounded-xl bg-orange-600 px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-orange-700"
               >
                 Complete Payment
               </Link>
             ) : null}
             <Link
               href="/cart"
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+              className="rounded-xl bg-slate-900 px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-slate-800"
             >
               Go to Cart
             </Link>
@@ -92,7 +92,7 @@ export default async function OrderDetailsPage({
 
         <section className="mb-6 rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
           <div className="grid gap-3 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-3">
-            <p>
+            <p className="break-all">
               Order ID: <span className="font-semibold text-slate-900">{order.id}</span>
             </p>
             <p>

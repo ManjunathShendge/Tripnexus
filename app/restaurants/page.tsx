@@ -159,8 +159,8 @@ export default async function RestaurantsPage({
   return (
     <main className="min-h-screen bg-gradient-to-b from-orange-50 via-amber-50 to-white">
       <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <div>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="max-w-2xl">
             <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-orange-600">
               Discover Food
             </p>
@@ -171,29 +171,29 @@ export default async function RestaurantsPage({
               Find restaurants by state, cuisine, quality score, and nearby distance.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <Link
               href="/cart"
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+              className="rounded-xl bg-slate-900 px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-slate-800"
             >
               View Cart
             </Link>
             <Link
               href="/"
-              className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-50"
+              className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-center text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-50"
             >
               Back Home
             </Link>
           </div>
         </div>
 
-        <form className="mb-8 grid gap-3 rounded-2xl border border-orange-100 bg-white p-4 shadow-sm sm:grid-cols-5">
+        <form className="mb-8 grid gap-3 rounded-2xl border border-orange-100 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5">
           <input
             type="text"
             name="q"
             defaultValue={query}
             placeholder="Search restaurants..."
-            className="col-span-2 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-800 outline-none ring-orange-200 transition placeholder:text-slate-400 focus:ring-2"
+            className="rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-800 outline-none ring-orange-200 transition placeholder:text-slate-400 focus:ring-2 sm:col-span-2 xl:col-span-2"
           />
           <select
             name="state"
@@ -231,15 +231,15 @@ export default async function RestaurantsPage({
           </select>
           <input type="hidden" name="lat" value={hasValidLocation ? latitude : ""} />
           <input type="hidden" name="lng" value={hasValidLocation ? longitude : ""} />
-          <div className="sm:col-span-5 flex justify-end">
+          <div className="flex justify-stretch sm:col-span-2 sm:justify-end xl:col-span-5">
             <button
               type="submit"
-              className="rounded-xl bg-orange-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
+              className="w-full rounded-xl bg-orange-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-orange-700 sm:w-auto"
             >
               Apply Filters
             </button>
           </div>
-          <div className="sm:col-span-5">
+          <div className="sm:col-span-2 xl:col-span-5">
             <NearbyLocator clearSortValue="best" />
           </div>
         </form>
@@ -261,7 +261,7 @@ export default async function RestaurantsPage({
                 key={restaurant.id}
                 className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="mb-3 flex items-center justify-between">
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                   <h2 className="text-lg font-semibold text-slate-900">
                     {restaurant.name}
                   </h2>
@@ -335,7 +335,7 @@ export default async function RestaurantsPage({
                 </div>
                 <Link
                   href={`/restaurants/${restaurant.id}`}
-                  className="mt-4 inline-flex rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
+                  className="mt-4 inline-flex w-full justify-center rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700 sm:w-auto"
                 >
                   View Menu
                 </Link>

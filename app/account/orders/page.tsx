@@ -36,7 +36,7 @@ export default async function AccountOrdersPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-orange-50 via-amber-50 to-white">
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">My Orders</h1>
             <p className="mt-1 text-sm text-slate-600">
@@ -45,7 +45,7 @@ export default async function AccountOrdersPage() {
           </div>
           <Link
             href="/restaurants"
-            className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-50"
+            className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-center text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-50"
           >
             Explore Restaurants
           </Link>
@@ -83,7 +83,7 @@ export default async function AccountOrdersPage() {
                       {order.restaurant.city ?? "City"} {order.restaurant.state ? `, ${order.restaurant.state}` : ""}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <p className="text-sm text-slate-500">
                       {new Date(order.createdAt).toLocaleString()}
                     </p>
@@ -104,7 +104,7 @@ export default async function AccountOrdersPage() {
                   </span>
                   <Link
                     href={`/orders/${order.id}`}
-                    className="ml-auto rounded-full border border-orange-200 px-3 py-1 font-medium text-orange-700 hover:bg-orange-50"
+                    className="w-full rounded-full border border-orange-200 px-3 py-1 text-center font-medium text-orange-700 hover:bg-orange-50 sm:ml-auto sm:w-auto"
                   >
                     View Details
                   </Link>

@@ -127,15 +127,15 @@ export default async function CartPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-orange-50 via-amber-50 to-white">
       <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Your Cart</h1>
             <p className="mt-1 text-sm text-slate-600">Demo customer: {customer.email}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <Link
               href="/restaurants"
-              className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-50"
+              className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-center text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-50"
             >
               Continue Shopping
             </Link>
@@ -143,7 +143,7 @@ export default async function CartPage() {
               <form action={clearCart}>
                 <button
                   type="submit"
-                  className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+                  className="w-full rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 sm:w-auto"
                 >
                   Clear Cart
                 </button>
@@ -219,7 +219,7 @@ export default async function CartPage() {
                     </form>
                     <Link
                       href={`/restaurants/${item.menuItem.restaurant.id}`}
-                      className="ml-auto rounded-lg border border-orange-200 px-3 py-1 text-sm font-medium text-orange-700 hover:bg-orange-50"
+                      className="w-full rounded-lg border border-orange-200 px-3 py-1 text-center text-sm font-medium text-orange-700 hover:bg-orange-50 sm:ml-auto sm:w-auto"
                     >
                       Back to Menu
                     </Link>
